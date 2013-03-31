@@ -1,0 +1,13 @@
+{
+  "name": "mikeymail",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+  },
+  "scripts": {
+    "start": "workers.js"
+  },
+  "engines": {
+    "node": "0.8.x"
+  }
+}

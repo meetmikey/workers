@@ -1,1 +1,1 @@
-a repository for generic "workers". Workers pull jobs off a queue and delegate jobs to other libraries (i.e. create image thumbnails, generate previews for files)
+a repository for generic "workers". Workers pull jobs off worker queue and delegate jobs to other libraries (i.e. create image thumbnails, generate previews for files)
