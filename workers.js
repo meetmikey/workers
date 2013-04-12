@@ -9,10 +9,9 @@ var appInitUtils = require(serverCommon + '/lib/appInitUtils'),
     sqsConnect = require(serverCommon + '/lib/sqsConnect');
 
 var initActions = [
-  appInitUtils.CONNECT_MONGO
+  appInitUtils.CONNECT_MONGO,
+  appInitUtils.CONNECT_ELASTIC_SEARCH
 ];
-
-
 
 
 appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
@@ -46,6 +45,6 @@ appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
       pollQueueCallback ();
     }
 
-  }, constants.MAX_WORKER_JOBS);
+  }, 1);
 
 });
