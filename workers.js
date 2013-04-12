@@ -5,11 +5,14 @@ var appInitUtils = require(serverCommon + '/lib/appInitUtils'),
     serverCommonConf = require (serverCommon + '/conf'),
     imageUtils = require (serverCommon + '/lib/imageUtils'),
     constants = require ('./constants'),
+    indexingHandler = require (serverCommon + '/lib/indexingHandler'),
     sqsConnect = require(serverCommon + '/lib/sqsConnect');
 
 var initActions = [
   appInitUtils.CONNECT_MONGO
 ];
+
+
 
 
 appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
@@ -20,6 +23,16 @@ appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
 
     if (job.jobType === 'thumbnail') {      
       imageUtils.doThumbnailingJob (job, function (err) {
+        if (err) {
+          pollQueueCallback (err);
+        }
+        else {
+          pollQueueCallback ();
+        }
+      });
+    }
+    else if (job.jobType === 'index') {
+      indexingHandler.doIndexingJob (job, function (err) {
         if (err) {
           pollQueueCallback (err);
         }
