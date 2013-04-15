@@ -45,6 +45,6 @@ appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
       pollQueueCallback ();
     }
 
-  }, 1);
+  }, constants.MAX_WORKER_JOBS);
 
 });
