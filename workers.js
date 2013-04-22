@@ -10,8 +10,9 @@ var appInitUtils = require(serverCommon + '/lib/appInitUtils'),
     sqsConnect = require(serverCommon + '/lib/sqsConnect');
 
 var initActions = [
-  appInitUtils.CONNECT_MONGO,
-  appInitUtils.CONNECT_ELASTIC_SEARCH
+    appInitUtils.CONNECT_MONGO
+  , appInitUtils.CONNECT_ELASTIC_SEARCH
+  , appInitUtils.MEMWATCH_MONITOR
 ];
 
 
