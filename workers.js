@@ -12,7 +12,7 @@ var appInitUtils = require(serverCommon + '/lib/appInitUtils'),
 var initActions = [
     appInitUtils.CONNECT_MONGO
   , appInitUtils.CONNECT_ELASTIC_SEARCH
-  , appInitUtils.MEMWATCH_MONITOR
+  //, appInitUtils.MEMWATCH_MONITOR
 ];
 
 
