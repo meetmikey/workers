@@ -25,7 +25,13 @@ appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
 
   winston.doInfo('maxWorkers: ' + maxWorkers);
 
-  sqsConnect.pollWorkerQueue(function (message, pollQueueCallback) {
+  var pollQueueFunction = sqsConnect.pollWorkerQueue;
+
+  if (constants.USE_REINDEXING_QUEUE) {
+    pollQueueFunction = sqsConnect.pollWorkerReindexQueue;
+  }
+
+  pollQueueFunction(function (message, pollQueueCallback) {
 
     var job = JSON.parse (message);
 
