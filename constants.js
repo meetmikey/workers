@@ -11,5 +11,5 @@ function define(name, value) {
 var environment = process.env.NODE_ENV;
 var cloudEnvironment = process.env.CLOUD_ENV;
 
-define ('USE_REINDEXING_QUEUE', false);
-define ('MAX_WORKER_JOBS', 20);
+define ('USE_REINDEXING_QUEUE', true);
+define ('MAX_WORKER_JOBS', 50);
