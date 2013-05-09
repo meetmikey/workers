@@ -18,58 +18,62 @@ var initActions = [
 
 appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
 
-  var maxWorkers = constants.MAX_WORKER_JOBS;
-  if ( process && process.argv && ( process.argv.length > 2 ) ) {
-    maxWorkers = process.argv[2];
-  }
+  setTimeout (function () {
 
-  winston.doInfo('maxWorkers: ' + maxWorkers);
-
-  var pollQueueFunction = sqsConnect.pollWorkerQueue;
-
-  if (constants.USE_REINDEXING_QUEUE) {
-    pollQueueFunction = sqsConnect.pollWorkerReindexQueue;
-  }
-
-  pollQueueFunction(function (message, pollQueueCallback) {
-
-    var job = JSON.parse (message);
-
-    if (job.jobType === 'thumbnail') {
-      imageUtils.doThumbnailingJob (job, function (err) {
-        if (err) {
-          pollQueueCallback (err);
-        }
-        else {
-          pollQueueCallback ();
-        }
-      });
-    }
-    else if (job.jobType === 'index') {
-      indexingHandler.doIndexingJob (job, function (err) {
-        if (err) {
-          pollQueueCallback (err);
-        }
-        else {
-          pollQueueCallback ();
-        }
-      });
-    }
-    else if (job.jobType === 'followLink') {
-      followLinkUtils.doFollowLinkJob(job, function (err) {
-        if (err) {
-          pollQueueCallback (err);
-        }
-        else {
-          pollQueueCallback ();
-        }
-      });
-    }
-    else {
-      winston.doError ('Unsupported worker job on queue', {job : job});
-      pollQueueCallback ();
+    var maxWorkers = constants.MAX_WORKER_JOBS;
+    if ( process && process.argv && ( process.argv.length > 2 ) ) {
+      maxWorkers = process.argv[2];
     }
 
-  }, maxWorkers);
+    winston.doInfo('maxWorkers: ' + maxWorkers);
+
+    var pollQueueFunction = sqsConnect.pollWorkerQueue;
+
+    if (constants.USE_REINDEXING_QUEUE) {
+      pollQueueFunction = sqsConnect.pollWorkerReindexQueue;
+    }
+
+    pollQueueFunction(function (message, pollQueueCallback) {
+
+      var job = JSON.parse (message);
+
+      if (job.jobType === 'thumbnail') {
+        imageUtils.doThumbnailingJob (job, function (err) {
+          if (err) {
+            pollQueueCallback (err);
+          }
+          else {
+            pollQueueCallback ();
+          }
+        });
+      }
+      else if (job.jobType === 'index') {
+        indexingHandler.doIndexingJob (job, function (err) {
+          if (err) {
+            pollQueueCallback (err);
+          }
+          else {
+            pollQueueCallback ();
+          }
+        });
+      }
+      else if (job.jobType === 'followLink') {
+        followLinkUtils.doFollowLinkJob(job, function (err) {
+          if (err) {
+            pollQueueCallback (err);
+          }
+          else {
+            pollQueueCallback ();
+          }
+        });
+      }
+      else {
+        winston.doError ('Unsupported worker job on queue', {job : job});
+        pollQueueCallback ();
+      }
+
+    }, maxWorkers);
+
+  }, 10000);
 
 });
