@@ -6,6 +6,7 @@ var appInitUtils = require(serverCommon + '/lib/appInitUtils'),
     imageUtils = require(serverCommon + '/lib/imageUtils'),
     followLinkUtils = require(serverCommon + '/lib/followLinkUtils'),
     constants = require('./constants'),
+    memcached = require (serverCommon + '/lib/memcachedConnect'),
     indexingHandler = require(serverCommon + '/lib/indexingHandler'),
     sqsConnect = require(serverCommon + '/lib/sqsConnect');
 
@@ -15,65 +16,103 @@ var initActions = [
   //, appInitUtils.MEMWATCH_MONITOR
 ];
 
+var workersApp = this;
+
+if (constants.CLOUD_ENV === 'aws') {
+  initActions.push (appInitUtils.CONNECT_MEMCACHED);
+}
 
 appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
 
   setTimeout (function () {
 
-    var maxWorkers = constants.MAX_WORKER_JOBS;
-    if ( process && process.argv && ( process.argv.length > 2 ) ) {
-      maxWorkers = process.argv[2];
+    workersApp.startWorkersPolling();
+
+    if (constants.CLOUD_ENV === 'aws') {
+      workersApp.startCacheInvalidationPolling();
     }
-
-    winston.doInfo('maxWorkers: ' + maxWorkers);
-
-    var pollQueueFunction = sqsConnect.pollWorkerQueue;
-
-    if (constants.USE_REINDEXING_QUEUE) {
-      pollQueueFunction = sqsConnect.pollWorkerReindexQueue;
-    }
-
-    pollQueueFunction(function (message, pollQueueCallback) {
-
-      var job = JSON.parse (message);
-
-      if (job.jobType === 'thumbnail') {
-        imageUtils.doThumbnailingJob (job, function (err) {
-          if (err) {
-            pollQueueCallback (err);
-          }
-          else {
-            pollQueueCallback ();
-          }
-        });
-      }
-      else if (job.jobType === 'index') {
-        indexingHandler.doIndexingJob (job, function (err) {
-          if (err) {
-            pollQueueCallback (err);
-          }
-          else {
-            pollQueueCallback ();
-          }
-        });
-      }
-      else if (job.jobType === 'followLink') {
-        followLinkUtils.doFollowLinkJob(job, function (err) {
-          if (err) {
-            pollQueueCallback (err);
-          }
-          else {
-            pollQueueCallback ();
-          }
-        });
-      }
-      else {
-        winston.doError ('Unsupported worker job on queue', {job : job});
-        pollQueueCallback ();
-      }
-
-    }, maxWorkers);
 
   }, 10000);
 
 });
+
+
+
+exports.startWorkersPolling = function () {
+
+  var maxWorkers = constants.MAX_WORKER_JOBS;
+  if ( process && process.argv && ( process.argv.length > 2 ) ) {
+    maxWorkers = process.argv[2];
+  }
+
+  var pollQueueFunction = sqsConnect.pollWorkerQueue;
+
+  if (constants.USE_REINDEXING_QUEUE) {
+    pollQueueFunction = sqsConnect.pollWorkerReindexQueue;
+  }
+
+  pollQueueFunction(function (message, pollQueueCallback) {
+
+    var job = JSON.parse (message);
+
+    if (job.jobType === 'thumbnail') {
+      imageUtils.doThumbnailingJob (job, function (err) {
+        if (err) {
+          pollQueueCallback (err);
+        }
+        else {
+          pollQueueCallback ();
+        }
+      });
+    }
+    else if (job.jobType === 'index') {
+      indexingHandler.doIndexingJob (job, function (err) {
+        if (err) {
+          pollQueueCallback (err);
+        }
+        else {
+          pollQueueCallback ();
+        }
+      });
+    }
+    else if (job.jobType === 'followLink') {
+      followLinkUtils.doFollowLinkJob(job, function (err) {
+        if (err) {
+          pollQueueCallback (err);
+        }
+        else {
+          pollQueueCallback ();
+        }
+      });
+    }
+    else {
+      winston.doError ('Unsupported worker job on queue', {job : job});
+      pollQueueCallback ();
+    }
+
+  }, maxWorkers);
+
+}
+
+
+exports.startCacheInvalidationPolling = function () {
+
+  var maxWorkers = constants.MAX_INVALIDATION_JOBS;
+
+  var pollQueueFunction = sqsConnect.pollCacheInvalidationQueue;
+
+  pollQueueFunction(function (message, pollQueueCallback) {
+
+    var job = JSON.parse (message);
+
+    memcached.delete (job._id, function (err) {
+      if (err) {
+        pollQueueCallback (err);
+      } else {
+        pollQueueCallback ();
+      }
+    });
+
+  }, maxWorkers);
+
+}
