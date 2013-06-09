@@ -75,6 +75,16 @@ exports.startWorkersPolling = function () {
         }
       });
     }
+    else if (job.jobType === 'deleteIndex') {
+      indexingHandler.doDeleteFromIndexJob (job, function (err) {
+        if (err) {
+          pollQueueCallback (err);
+        }
+        else {
+          pollQueueCallback ();
+        }
+      });
+    }
     else if (job.jobType === 'followLink') {
       followLinkUtils.doFollowLinkJob(job, function (err) {
         if (err) {
