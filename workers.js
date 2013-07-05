@@ -24,6 +24,8 @@ if (constants.CLOUD_ENV === 'aws') {
 
 appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
 
+  serverCommonConf.turnDebugModeOn();
+
   setTimeout (function () {
 
     workersApp.startWorkersPolling();
