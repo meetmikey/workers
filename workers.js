@@ -4,6 +4,7 @@ var appInitUtils = require(serverCommon + '/lib/appInitUtils'),
     winston = require(serverCommon + '/lib/winstonWrapper').winston,
     serverCommonConf = require(serverCommon + '/conf'),
     imageUtils = require(serverCommon + '/lib/imageUtils'),
+    upgradeUtils = require(serverCommon + '/lib/upgradeUtils'),
     followLinkUtils = require(serverCommon + '/lib/followLinkUtils'),
     constants = require('./constants'),
     memcached = require (serverCommon + '/lib/memcachedConnect'),
@@ -89,6 +90,16 @@ exports.startWorkersPolling = function () {
     }
     else if (job.jobType === 'followLink') {
       followLinkUtils.doFollowLinkJob(job, function (err) {
+        if (err) {
+          pollQueueCallback (err);
+        }
+        else {
+          pollQueueCallback ();
+        }
+      });
+    }
+    else if (job.jobType === 'userUpgrade') {
+      upgradeUtils.doUserUpgradeJob(job, function (err) {
         if (err) {
           pollQueueCallback (err);
         }
