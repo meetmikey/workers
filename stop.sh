@@ -1,3 +1,3 @@
-#!/bin/sh
 
-forever stop workers.js
+#usage: stop.sh <now>
+$MIKEY_BUILD/serverCommon/scripts/stopProgram.sh workers $1
