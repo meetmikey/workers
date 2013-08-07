@@ -26,7 +26,7 @@ if (constants.CLOUD_ENV === 'aws') {
 
 appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
 
-  serverCommonConf.turnDebugModeOn();
+  //serverCommonConf.turnDebugModeOn();
 
   setTimeout (function () {
 
