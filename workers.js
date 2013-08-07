@@ -49,13 +49,8 @@ exports.startWorkersPolling = function () {
     maxWorkers = process.argv[2];
   }
 
-  var pollQueueFunction = sqsConnect.pollWorkerQueue;
 
-  if (constants.USE_REINDEXING_QUEUE) {
-    pollQueueFunction = sqsConnect.pollWorkerReindexQueue;
-  }
-
-  pollQueueFunction(function (message, pollQueueCallback) {
+  var delegateWorkerJob = function (message, pollQueueCallback) {
 
     var job = JSON.parse (message);
 
@@ -114,7 +109,24 @@ exports.startWorkersPolling = function () {
       pollQueueCallback ();
     }
 
-  }, maxWorkers);
+  }
+
+
+  var pollQueueFunction;
+  var pollQueueFunctionQuick;
+
+  if (constants.USE_REINDEXING_QUEUE) {
+    pollQueueFunction = sqsConnect.pollWorkerReindexQueue;
+  } else {
+    pollQueueFunction = sqsConnect.pollWorkerQueue;
+    pollQueueFunctionQuick = = sqsConnect.pollWorkerQuickQueue;
+  }
+
+  pollQueueFunction(delegateWorkerJob, maxWorkers);
+
+  if (pollQueueFunctionQuick) {
+    pollQueueFunctionQuick(delegateWorkerJob, maxWorkers);
+  }
 
 }
 
