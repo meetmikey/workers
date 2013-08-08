@@ -49,69 +49,6 @@ exports.startWorkersPolling = function () {
     maxWorkers = process.argv[2];
   }
 
-
-  var delegateWorkerJob = function (message, pollQueueCallback) {
-
-    var job = JSON.parse (message);
-
-    if (job.jobType === 'thumbnail') {
-      imageUtils.doThumbnailingJob (job, function (err) {
-        if (err) {
-          pollQueueCallback (err);
-        }
-        else {
-          pollQueueCallback ();
-        }
-      });
-    }
-    else if (job.jobType === 'index') {
-      indexingHandler.doIndexingJob (job, function (err) {
-        if (err) {
-          pollQueueCallback (err);
-        }
-        else {
-          pollQueueCallback ();
-        }
-      });
-    }
-    else if (job.jobType === 'deleteIndex') {
-      indexingHandler.doDeleteFromIndexJob (job, function (err) {
-        if (err) {
-          pollQueueCallback (err);
-        }
-        else {
-          pollQueueCallback ();
-        }
-      });
-    }
-    else if (job.jobType === 'followLink') {
-      followLinkUtils.doFollowLinkJob(job, function (err) {
-        if (err) {
-          pollQueueCallback (err);
-        }
-        else {
-          pollQueueCallback ();
-        }
-      });
-    }
-    else if (job.jobType === 'userUpgrade') {
-      upgradeUtils.doUserUpgradeJob(job, function (err) {
-        if (err) {
-          pollQueueCallback (err);
-        }
-        else {
-          pollQueueCallback ();
-        }
-      });
-    }
-    else {
-      winston.doError ('Unsupported worker job on queue', {job : job});
-      pollQueueCallback ();
-    }
-
-  }
-
-
   var pollQueueFunction;
   var pollQueueFunctionQuick;
 
@@ -119,16 +56,106 @@ exports.startWorkersPolling = function () {
     pollQueueFunction = sqsConnect.pollWorkerReindexQueue;
   } else {
     pollQueueFunction = sqsConnect.pollWorkerQueue;
-    pollQueueFunctionQuick = = sqsConnect.pollWorkerQuickQueue;
+    pollQueueFunctionQuick = sqsConnect.pollWorkerQuickQueue;
   }
 
-  pollQueueFunction(delegateWorkerJob, maxWorkers);
+  pollQueueFunction(workersApp.passWorkerJob, maxWorkers);
 
   if (pollQueueFunctionQuick) {
-    pollQueueFunctionQuick(delegateWorkerJob, maxWorkers);
+    pollQueueFunctionQuick(workersApp.passWorkerJobQuick, maxWorkers);
   }
 
 }
+
+exports.startThumbnailPolling = function () {
+
+  var maxWorkers = constants.MAX_WORKER_THUMBNAIL_JOBS;
+  if ( process && process.argv && ( process.argv.length > 2 ) ) {
+    maxWorkers = process.argv[2];
+  }
+
+  var pollQueueFunction = sqsConnect.pollThumnbailQueue;
+  var pollQueueFunctionQuick = sqsConnect.pollThumbnailQuickQueue;
+  pollQueueFunction(workersApp.passWorkerJob, maxWorkers);
+  pollQueueFunctionQuick(workersApp.passWorkerJobQuick, maxWorkers);
+
+}
+
+// exists so we can pass an extra arg to delegate
+exports.passWorkerJobQuick = function (message, pollQueueCallback) {
+  winston.doInfo ('got quick job', {msg :message});
+  workersApp.delegateWorkerJob (true, message, pollQueueCallback);
+}
+
+// exists so we can pass an extra arg to delegate
+exports.passWorkerJob = function (message, pollQueueCallback) {
+  winston.doInfo ('got slow job', {msg :message});
+  workersApp.delegateWorkerJob (false, message, pollQueueCallback);
+}
+
+exports.delegateWorkerJob = function (isQuick, message, pollQueueCallback) {
+
+  var job = JSON.parse (message);
+  job.isQuick = isQuick;
+
+  if (job.jobType === 'thumbnail') {
+    imageUtils.doThumbnailingJob (job, function (err) {
+      if (err) {
+        pollQueueCallback (err);
+      }
+      else {
+        pollQueueCallback ();
+      }
+    });
+  }
+  else if (job.jobType === 'index') {
+    indexingHandler.doIndexingJob (job, function (err) {
+      if (err) {
+        pollQueueCallback (err);
+      }
+      else {
+        pollQueueCallback ();
+      }
+    });
+  }
+  else if (job.jobType === 'deleteIndex') {
+    indexingHandler.doDeleteFromIndexJob (job, function (err) {
+      if (err) {
+        pollQueueCallback (err);
+      }
+      else {
+        pollQueueCallback ();
+      }
+    });
+  }
+  else if (job.jobType === 'followLink') {
+
+    followLinkUtils.doFollowLinkJob(job, function (err) {
+      if (err) {
+        pollQueueCallback (err);
+      }
+      else {
+        pollQueueCallback ();
+      }
+    });
+  }
+  else if (job.jobType === 'userUpgrade') {
+    upgradeUtils.doUserUpgradeJob(job, function (err) {
+      if (err) {
+        pollQueueCallback (err);
+      }
+      else {
+        pollQueueCallback ();
+      }
+    });
+  }
+  else {
+    winston.doError ('Unsupported worker job on queue', {job : job});
+    pollQueueCallback ();
+  }
+
+}
+
 
 
 exports.startCacheInvalidationPolling = function () {
