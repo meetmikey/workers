@@ -29,13 +29,20 @@ appInitUtils.initApp( 'workers', initActions, serverCommonConf, function() {
   //serverCommonConf.turnDebugModeOn();
 
   setTimeout (function () {
-
-    workersApp.startWorkersPolling();
+    if (constants.NODE_ENV == 'production') {    
+      if (constants.THUMBNAILER == 'true') {
+        workersApp.startThumbnailPolling();
+      } else {
+        workersApp.startWorkersPolling();
+      }
+    } else {
+      workersApp.startThumbnailPolling();
+      workersApp.startWorkersPolling();      
+    }
 
     if (constants.CLOUD_ENV === 'aws') {
       workersApp.startCacheInvalidationPolling();
     }
-
   }, 10000);
 
 });
@@ -74,7 +81,7 @@ exports.startThumbnailPolling = function () {
     maxWorkers = process.argv[2];
   }
 
-  var pollQueueFunction = sqsConnect.pollThumnbailQueue;
+  var pollQueueFunction = sqsConnect.pollThumbnailQueue;
   var pollQueueFunctionQuick = sqsConnect.pollThumbnailQuickQueue;
   pollQueueFunction(workersApp.passWorkerJob, maxWorkers);
   pollQueueFunctionQuick(workersApp.passWorkerJobQuick, maxWorkers);
@@ -92,6 +99,7 @@ exports.passWorkerJob = function (message, pollQueueCallback) {
   winston.doInfo ('got slow job', {msg :message});
   workersApp.delegateWorkerJob (false, message, pollQueueCallback);
 }
+
 
 exports.delegateWorkerJob = function (isQuick, message, pollQueueCallback) {
 
