@@ -17,5 +17,5 @@ define ('MAX_WORKER_JOBS', 15);
 define ('CLOUD_ENV', cloudEnvironment);
 define ('NODE_ENV', environment);
 define ('MAX_INVALIDATION_JOBS', 10);
-define ('MAX_WORKER_THUMBNAIL_JOBS', 15);
+define ('MAX_WORKER_THUMBNAIL_JOBS', 20);
 define ('THUMBNAILER', thumbnailer);
