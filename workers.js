@@ -14,7 +14,7 @@ var appInitUtils = require(serverCommon + '/lib/appInitUtils'),
 var initActions = [
     appInitUtils.CONNECT_MONGO
   , appInitUtils.CONNECT_ELASTIC_SEARCH
-  , appInitUtils.RESTART_EMAIL
+  //, appInitUtils.RESTART_EMAIL
   //, appInitUtils.MEMWATCH_MONITOR
 ];
 
